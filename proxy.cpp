@@ -859,7 +859,11 @@ void *ep_loop_read(void *arg) {
 					break;
 				}
 
-				if (nbytes >= 0) {
+				// A timeout on an idle endpoint also leaves nbytes at 0.
+				// Only a successful transfer is a real zero-length packet.
+				// Forwarding a timeout would send the host a packet the
+				// device never sent.
+				if (rv == LIBUSB_SUCCESS || nbytes > 0) {
 					memcpy(io.data, data, nbytes);
 					io.inner.ep = ep_num;
 					io.inner.flags = 0;
